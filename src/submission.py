@@ -27,6 +27,7 @@ def sigmoid(x):
   """
 
   ### START CODE HERE
+  s = 1/(1+np.exp(-x))
   ### END CODE HERE
 
   return s
@@ -66,6 +67,13 @@ def naive_softmax_loss_and_gradient(center_word_vec,outside_word_idx,outside_vec
   ### to integer overflow.
   
   ### START CODE HERE
+  pred = softmax(outside_vectors.dot(center_word_vec.T))
+  loss = -np.log(pred[outside_word_idx])
+  grad_center_vec = (-outside_vectors[outside_word_idx, :] + np.sum(pred[i]*outside_vectors[i] for i in range(len(outside_vectors))))
+
+  y = np.zeros((len(outside_vectors), 1))
+  y[outside_word_idx, 0] = 1
+  grad_outside_vecs = (center_word_vec.reshape(-1, 1)).dot((pred.reshape(-1, 1) - y).T).T
   ### END CODE HERE
 
   return loss, grad_center_vec, grad_outside_vecs
@@ -144,6 +152,15 @@ def skipgram(current_center_word, window_size, outside_words, word2ind, center_w
   grad_outside_vectors = np.zeros(outside_vectors.shape)
 
   ### START CODE HERE
+  for outside_word in outside_words:
+    cur_loss, cur_grad_center_vec, cur_grad_outside_vecs = word2vec_loss_and_gradient(
+      center_word_vectors[word2ind[current_center_word]],
+      word2ind[outside_word],
+      outside_vectors,
+      dataset)
+    loss += cur_loss
+    grad_center_vecs[word2ind[current_center_word], :] += cur_grad_center_vec
+    grad_outside_vectors += cur_grad_outside_vecs
   ### END CODE HERE
 
   return loss, grad_center_vecs, grad_outside_vectors
